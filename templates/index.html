@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to CalmCompass AI</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+        
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            background-color: #05020a;
+            color: #f3f4f6;
+        }
+    </style>
+</head>
+<body class="min-h-screen relative overflow-x-hidden flex flex-col items-center justify-center selection:bg-purple-500/30 selection:text-purple-200">
+
+    <canvas id="cloud-canvas" class="fixed inset-0 w-full h-full object-cover z-0 pointer-events-none"></canvas>
+
+    <div class="fixed top-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full blur-[140px] pointer-events-none bg-purple-600/5 z-5"></div>
+    <div class="fixed bottom-[-10%] right-[-10%] w-[50vw] h-[50vw] rounded-full blur-[160px] pointer-events-none bg-indigo-500/5 z-5"></div>
+
+    <div class="max-w-2xl mx-auto px-8 py-12 text-center relative z-10 space-y-8 animate-fade-in bg-stone-950/50 backdrop-blur-xl border border-white/10 rounded-3xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.7)] mx-4">
+        
+        <div class="space-y-4">
+            <div class="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-purple-500/10 border border-purple-500/20 shadow-inner mb-2">
+                <i class="fa-solid fa-compass text-4xl text-purple-500"></i>
+            </div>
+            <h1 class="text-4xl sm:text-6xl font-extrabold tracking-tight text-white">
+                CalmCompass <span class="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-indigo-400">AI</span>
+            </h1>
+            <p class="text-stone-300 text-sm sm:text-base font-light tracking-wide max-w-md mx-auto leading-relaxed">
+                A clean dashboard for managing high school stress and tracking sleep logs.
+            </p>
+        </div>
+
+        <hr class="border-stone-800/60 max-w-xs mx-auto">
+
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-4 max-w-md mx-auto w-full">
+            <a href="/dashboard" class="w-full sm:w-auto flex-1 bg-stone-900 border border-stone-800 text-stone-200 hover:text-white hover:border-stone-700 font-bold py-4 px-6 rounded-xl shadow-md transition-all active:scale-[0.99] flex items-center justify-center gap-2 text-xs uppercase tracking-widest cursor-pointer">
+                <i class="fa-solid fa-right-to-bracket text-purple-400"></i> Direct Access
+            </a>
+            
+            <a href="/login" class="w-full sm:w-auto flex-1 bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-bold py-4 px-6 rounded-xl shadow-lg hover:brightness-110 transition-all active:scale-[0.99] flex items-center justify-center gap-2 text-xs uppercase tracking-widest cursor-pointer">
+                <i class="fa-brands fa-google"></i> Login with Google
+            </a>
+        </div>
+
+        <div class="text-[10px] font-mono text-stone-400 tracking-widest uppercase pt-4">
+            Studio Platform v2.1 Ecosystem
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('cloud-canvas');
+        const ctx = canvas.getContext('2d');
+
+        let width = canvas.width = window.innerWidth;
+        let height = canvas.height = window.innerHeight;
+
+        window.addEventListener('resize', () => {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        });
+
+        // Simulates a realistic multi-blob fluffy cloud entity tracking across screen space
+        class CloudCluster {
+            constructor(startRandomX) {
+                this.reset();
+                if (startRandomX) {
+                    // Pre-distribute horizontally on layout startup
+                    this.x = Math.random() * (width + 500) - 250;
+                }
+            }
+            
+            reset() {
+                this.x = -400;
+                this.y = Math.random() * (height * 0.7); // Populate mostly upper and mid sections
+                this.speed = Math.random() * 0.16 + 0.05; // Hyper-slow relaxing drift speed
+                this.scale = Math.random() * 0.8 + 0.4;
+                
+                this.blobs = [];
+                const blobCount = Math.floor(Math.random() * 5) + 6; // 6 to 10 sub-elements for organic shapes
+                
+                // Dreamy dusk palette variations
+                const duskColors = [
+                    { center: 'rgba(230, 170, 255, ', edge: 'rgba(107, 33, 168, 0)' },   // Twilight pinkish lavender
+                    { center: 'rgba(192, 132, 252, ', edge: 'rgba(79, 70, 229, 0)' },    // Misty violet
+                    { center: 'rgba(255, 185, 235, ', edge: 'rgba(147, 51, 234, 0)' }     // Soft dusk rose
+                ];
+                const colorSet = duskColors[Math.floor(Math.random() * duskColors.length)];
+                
+                for (let i = 0; i < blobCount; i++) {
+                    let offsetX = (Math.random() * 180 - 90) * this.scale;
+                    let offsetY = (Math.random() * 50 - 25) * this.scale;
+                    let radius = (Math.random() * 100 + 70) * this.scale;
+                    let opacity = Math.random() * 0.09 + 0.05; // Smooth transparency matching dusk atmosphere
+                    
+                    this.blobs.push({
+                        ox: offsetX,
+                        oy: offsetY,
+                        r: radius,
+                        opacity: opacity,
+                        centerColor: colorSet.center,
+                        edgeColor: colorSet.edge
+                    });
+                }
+            }
+            
+            update() {
+                this.x += this.speed;
+                // Recycle cloud once entirely outside viewport boundaries
+                if (this.x - 400 > width) {
+                    this.reset();
+                }
+            }
+            
+            draw() {
+                this.blobs.forEach(blob => {
+                    let bx = this.x + blob.ox;
+                    let by = this.y + blob.oy;
+                    
+                    let grad = ctx.createRadialGradient(bx, by, blob.r * 0.02, bx, by, blob.r);
+                    grad.addColorStop(0, blob.centerColor + blob.opacity + ')');
+                    grad.addColorStop(0.4, blob.centerColor + (blob.opacity * 0.35) + ')');
+                    grad.addColorStop(1, blob.edgeColor);
+                    
+                    ctx.fillStyle = grad;
+                    ctx.beginPath();
+                    ctx.arc(bx, by, blob.r, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+            }
+        }
+
+        let clusters = [];
+        function init() {
+            clusters = [];
+            // Seed cloud arrays across initial space coordinates
+            for (let i = 0; i < 7; i++) {
+                clusters.push(new CloudCluster(true));
+            }
+        }
+
+        function animate() {
+            // Render beautiful dusk base backdrop gradient
+            let skyGrad = ctx.createLinearGradient(0, 0, 0, height);
+            skyGrad.addColorStop(0, '#0a0414');   // Deep space indigo
+            skyGrad.addColorStop(0.4, '#1b0b2b');  // Deep dusk purple
+            skyGrad.addColorStop(0.75, '#3c1352'); // Rich violet
+            skyGrad.addColorStop(1, '#5c1b6d');    // Plum sunset magenta
+            
+            ctx.fillStyle = skyGrad;
+            ctx.fillRect(0, 0, width, height);
+
+            // Frame iteration lifecycle updates
+            clusters.forEach(cluster => {
+                cluster.update();
+                cluster.draw();
+            });
+
+            requestAnimationFrame(animate);
+        }
+
+        init();
+        animate();
+    </script>
+</body>
+</html>
