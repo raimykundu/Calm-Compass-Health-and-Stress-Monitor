@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Welcome to CalmCompass AI</title>
+    <title>Dashboard - CalmCompass AI</title>
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
         
@@ -14,47 +15,486 @@
             background-color: #05020a;
             color: #f3f4f6;
         }
+
+        /* Sleek custom scrollbars for scrollable components */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(168, 85, 247, 0.2);
+            border-radius: 99px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(168, 85, 247, 0.4);
+        }
     </style>
 </head>
-<body class="min-h-screen relative overflow-x-hidden flex flex-col items-center justify-center selection:bg-purple-500/30 selection:text-purple-200">
+<body class="min-h-screen relative overflow-x-hidden flex flex-col items-center selection:bg-purple-500/30 selection:text-purple-200">
 
     <canvas id="cloud-canvas" class="fixed inset-0 w-full h-full object-cover z-0 pointer-events-none"></canvas>
 
     <div class="fixed top-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full blur-[140px] pointer-events-none bg-purple-600/5 z-5"></div>
     <div class="fixed bottom-[-10%] right-[-10%] w-[50vw] h-[50vw] rounded-full blur-[160px] pointer-events-none bg-indigo-500/5 z-5"></div>
 
-    <div class="max-w-2xl mx-auto px-8 py-12 text-center relative z-10 space-y-8 animate-fade-in bg-stone-950/50 backdrop-blur-xl border border-white/10 rounded-3xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.7)] mx-4">
+    <div class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 flex flex-col min-h-screen py-6">
         
-        <div class="space-y-4">
-            <div class="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-purple-500/10 border border-purple-500/20 shadow-inner mb-2">
-                <i class="fa-solid fa-compass text-4xl text-purple-500"></i>
+        <header class="flex flex-col sm:flex-row items-center justify-between gap-4 pb-6 border-b border-stone-800/60 mb-8">
+            <div class="flex items-center gap-3">
+                <div class="flex items-center justify-center w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/20 shadow-inner">
+                    <i class="fa-solid fa-compass text-2xl text-purple-500"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-extrabold tracking-tight text-white">
+                        CalmCompass <span class="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-indigo-400">AI</span>
+                    </h1>
+                    <p class="text-stone-400 text-xs font-light">High School Wellness Hub Portal</p>
+                </div>
             </div>
-            <h1 class="text-4xl sm:text-6xl font-extrabold tracking-tight text-white">
-                CalmCompass <span class="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-indigo-400">AI</span>
-            </h1>
-            <p class="text-stone-300 text-sm sm:text-base font-light tracking-wide max-w-md mx-auto leading-relaxed">
-                A clean dashboard for managing high school stress and tracking sleep logs.
-            </p>
-        </div>
-
-        <hr class="border-stone-800/60 max-w-xs mx-auto">
-
-        <div class="flex flex-col sm:flex-row items-center justify-center gap-4 max-w-md mx-auto w-full">
-            <a href="/dashboard" class="w-full sm:w-auto flex-1 bg-stone-900 border border-stone-800 text-stone-200 hover:text-white hover:border-stone-700 font-bold py-4 px-6 rounded-xl shadow-md transition-all active:scale-[0.99] flex items-center justify-center gap-2 text-xs uppercase tracking-widest cursor-pointer">
-                <i class="fa-solid fa-right-to-bracket text-purple-400"></i> Direct Access
-            </a>
             
-            <a href="/login" class="w-full sm:w-auto flex-1 bg-gradient-to-r from-purple-500 to-indigo-600 text-white font-bold py-4 px-6 rounded-xl shadow-lg hover:brightness-110 transition-all active:scale-[0.99] flex items-center justify-center gap-2 text-xs uppercase tracking-widest cursor-pointer">
-                <i class="fa-brands fa-google"></i> Login with Google
-            </a>
+            <div class="flex items-center gap-4">
+                <div class="text-right hidden sm:block">
+                    <p class="text-sm font-semibold text-stone-200">
+                        {% if user and user.name %}
+                            {{ user.name }}
+                        {% elif user and user.email %}
+                            {{ user.email }}
+                        {% else %}
+                            Guest Student
+                        {% endif %}
+                    </p>
+                    <p class="text-[10px] font-mono text-purple-400 uppercase tracking-widest">Active Profile</p>
+                </div>
+                
+                {% if user and user.picture %}
+                    <img src="{{ user.picture }}" alt="Profile Avatar" class="w-10 h-10 rounded-full border border-purple-500/30">
+                {% else %}
+                    <div class="w-10 h-10 rounded-full border border-stone-800 bg-stone-900/60 flex items-center justify-center text-stone-400">
+                        <i class="fa-solid fa-user text-sm"></i>
+                    </div>
+                {% endif %}
+                
+                <a href="/logout" class="bg-stone-900/80 hover:bg-stone-800 border border-stone-800 text-stone-300 hover:text-white px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-right-from-bracket text-red-400"></i> Logout
+                </a>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start flex-1">
+            
+            <div class="lg:col-span-5 bg-stone-950/40 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl flex flex-col h-[740px] overflow-hidden">
+                <div class="p-4 border-b border-stone-800/60 bg-stone-950/20 flex items-center gap-2">
+                    <i class="fa-solid fa-comment-dots text-purple-400"></i>
+                    <div>
+                        <h2 class="text-sm font-bold text-white">Mode 1: Comfort Companion</h2>
+                        <p class="text-[11px] text-stone-400">Empathetic peer counselor response portal</p>
+                    </div>
+                </div>
+                
+                <div id="chat-messages" class="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
+                    <div class="flex items-start gap-2.5">
+                        <div class="w-8 h-8 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 text-xs shrink-0">
+                            <i class="fa-solid fa-user-shield"></i>
+                        </div>
+                        <div class="flex flex-col w-full max-w-[85%] leading-1.5 p-3 border border-stone-800 bg-stone-900/60 rounded-r-xl rounded-bl-xl">
+                            <p class="text-xs font-normal text-stone-200">Hi there! I'm right here listening. Tell me what's on your mind today.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="safety-alert" class="hidden mx-4 my-2 p-3 bg-red-950/40 border border-red-500/30 rounded-xl flex items-start gap-2.5">
+                    <i class="fa-solid fa-circle-exclamation text-red-400 mt-0.5 text-xs animate-pulse"></i>
+                    <div class="text-[11px] text-red-200 leading-relaxed">
+                        <span class="font-bold text-red-400">Crisis Safety Protocol:</span> It looks like you might be going through a really tough moment. Please consider talking to a professional or reach out to the crisis line by texting or calling <strong class="text-white underline">988</strong> immediately.
+                    </div>
+                </div>
+
+                <form id="chat-form" class="p-4 border-t border-stone-800/60 bg-stone-950/20 flex gap-2">
+                    <input type="text" id="chat-input" placeholder="Discuss what is causing stress..." autocomplete="off" class="flex-1 bg-stone-900/80 border border-stone-800 text-stone-200 placeholder-stone-500 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:border-purple-500/50 transition-all">
+                    <button type="submit" class="bg-purple-600 hover:bg-purple-500 text-white rounded-xl px-4 py-2.5 text-xs font-bold transition-all flex items-center justify-center gap-1.5 active:scale-95 cursor-pointer">
+                        <i class="fa-solid fa-paper-plane"></i>
+                    </button>
+                </form>
+            </div>
+
+            <div class="lg:col-span-7 space-y-6">
+
+                <div class="bg-stone-950/40 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl p-5 flex flex-col sm:flex-row items-center gap-6">
+                    <div class="relative w-32 h-32 flex items-center justify-center shrink-0">
+                        <svg class="w-full h-full transform -rotate-90" viewBox="0 0 120 120">
+                            <defs>
+                                <linearGradient id="sleepQualityGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="#38bdf8" />
+                                    <stop offset="100%" stop-color="#4f46e5" />
+                                </linearGradient>
+                                <linearGradient id="stressGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="#f43f5e" />
+                                    <stop offset="100%" stop-color="#a855f7" />
+                                </linearGradient>
+                                <linearGradient id="sleepDurationGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" stop-color="#fbbf24" />
+                                    <stop offset="100%" stop-color="#f59e0b" />
+                                </linearGradient>
+                            </defs>
+                            
+                            <circle cx="60" cy="60" r="50" stroke="rgba(79, 70, 229, 0.12)" stroke-width="8" fill="transparent" />
+                            <circle id="ring-sleep-quality" cx="60" cy="60" r="50" stroke="url(#sleepQualityGrad)" stroke-width="8" fill="transparent"
+                                    stroke-linecap="round" stroke-dasharray="314.16" stroke-dashoffset="314.16" class="transition-all duration-500 ease-out" />
+                                    
+                            <circle cx="60" cy="60" r="38" stroke="rgba(168, 85, 247, 0.12)" stroke-width="8" fill="transparent" />
+                            <circle id="ring-stress" cx="60" cy="60" r="38" stroke="url(#stressGrad)" stroke-width="8" fill="transparent"
+                                    stroke-linecap="round" stroke-dasharray="238.76" stroke-dashoffset="238.76" class="transition-all duration-500 ease-out" />
+                                    
+                            <circle cx="60" cy="60" r="26" stroke="rgba(245, 158, 11, 0.12)" stroke-width="8" fill="transparent" />
+                            <circle id="ring-sleep-duration" cx="60" cy="60" r="26" stroke="url(#sleepDurationGrad)" stroke-width="8" fill="transparent"
+                                    stroke-linecap="round" stroke-dasharray="163.36" stroke-dashoffset="163.36" class="transition-all duration-500 ease-out" />
+                        </svg>
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <i class="fa-solid fa-heart-pulse text-purple-400 text-lg opacity-80"></i>
+                        </div>
+                    </div>
+                    
+                    <div class="flex-1 grid grid-cols-3 gap-4 w-full text-center sm:text-left">
+                        <div class="space-y-1">
+                            <div class="flex items-center justify-center sm:justify-start gap-1.5 text-xs font-semibold text-sky-400">
+                                <span class="w-2 h-2 rounded-full bg-sky-400"></span> Quality
+                            </div>
+                            <p class="text-xl font-bold text-white"><span id="ring-val-quality">70</span>%</p>
+                            <p class="text-[10px] text-stone-500 font-mono">Rest Depth</p>
+                        </div>
+                        <div class="space-y-1">
+                            <div class="flex items-center justify-center sm:justify-start gap-1.5 text-xs font-semibold text-rose-400">
+                                <span class="w-2 h-2 rounded-full bg-rose-400"></span> Stress
+                            </div>
+                            <p class="text-xl font-bold text-white"><span id="ring-val-stress">5</span>/10</p>
+                            <p class="text-[10px] text-stone-500 font-mono">Load Factor</p>
+                        </div>
+                        <div class="space-y-1">
+                            <div class="flex items-center justify-center sm:justify-start gap-1.5 text-xs font-semibold text-amber-400">
+                                <span class="w-2 h-2 rounded-full bg-amber-400"></span> Logged
+                            </div>
+                            <p class="text-xl font-bold text-white"><span id="ring-val-duration">7.2</span>h</p>
+                            <p class="text-[10px] text-stone-500 font-mono">Goal: 8.0h</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-stone-950/40 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl p-5 space-y-4">
+                    <div class="flex items-center gap-2 pb-2 border-b border-stone-800/60">
+                        <i class="fa-solid fa-heart-pulse text-indigo-400"></i>
+                        <div>
+                            <h2 class="text-sm font-bold text-white">Mode 2: Stress Metric & Action Planner</h2>
+                            <p class="text-[11px] text-stone-400">Receive an immediate, comforting sensory cooldown workflow</p>
+                        </div>
+                    </div>
+                    
+                    <form id="stress-form" class="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
+                        <div class="space-y-1.5">
+                            <label class="text-[11px] font-medium text-stone-300 block">Stress State (<span id="stress-val" class="font-bold text-purple-400">5</span>/10)</label>
+                            <input type="range" id="stress-scale" min="1" max="10" value="5" class="w-full accent-purple-500 h-1.5 bg-stone-800 rounded-lg cursor-pointer">
+                        </div>
+                        <div class="space-y-1.5">
+                            <label class="text-[11px] font-medium text-stone-300 block">Sleep Rested (hours)</label>
+                            <input type="number" id="sleep-hours" min="0" max="24" step="0.1" value="7.2" class="w-full bg-stone-900/80 border border-stone-800 text-stone-200 rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:border-purple-500/50">
+                        </div>
+                        <div class="space-y-1.5">
+                            <label class="text-[11px] font-medium text-stone-300 block">Resting Heart Rate (optional)</label>
+                            <input type="number" id="heart-rate" placeholder="e.g. 75 bpm" class="w-full bg-stone-900/80 border border-stone-800 text-stone-200 rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:border-purple-500/50">
+                        </div>
+                        <div class="sm:col-span-3 pt-2">
+                            <button type="submit" id="stress-submit" class="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold py-2.5 px-4 rounded-xl text-xs tracking-wide hover:brightness-110 transition-all flex items-center justify-center gap-2 cursor-pointer">
+                                <i class="fa-solid fa-wand-magic-sparkles"></i> Construct Cooldown Tactical Guide
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <div id="stress-response-wrapper" class="hidden mt-3 p-4 bg-stone-900/50 border border-stone-800 rounded-xl space-y-2 max-h-[250px] overflow-y-auto custom-scrollbar">
+                        <h3 class="text-xs font-bold text-purple-400 flex items-center gap-1.5">
+                            <i class="fa-solid fa-clipboard-list"></i> Tactical Cooldown Workflow Plan
+                        </h3>
+                        <div id="stress-response-content" class="text-xs text-stone-300 leading-relaxed space-y-2 whitespace-normal prose prose-invert prose-purple max-w-none">
+                            </div>
+                    </div>
+                </div>
+
+                <div class="bg-stone-950/40 backdrop-blur-xl border border-white/10 rounded-2xl shadow-xl p-5 space-y-4">
+                    <div class="flex items-center gap-2 pb-2 border-b border-stone-800/60">
+                        <i class="fa-solid fa-moon text-amber-400"></i>
+                        <div>
+                            <h2 class="text-sm font-bold text-white">Mode 3: Advanced Sleep Pattern Analytics</h2>
+                            <p class="text-[11px] text-stone-400">Adolescent biological profile analysis & circadian optimization</p>
+                        </div>
+                    </div>
+                    
+                    <form id="sleep-form" class="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
+                        <div class="space-y-1.5">
+                            <label class="text-[11px] font-medium text-stone-300 block">Duration (hours)</label>
+                            <input type="number" id="sleep-duration" min="0" max="24" step="0.1" value="7.2" class="w-full bg-stone-900/80 border border-stone-800 text-stone-200 rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:border-purple-500/50">
+                        </div>
+                        <div class="space-y-1.5">
+                            <label class="text-[11px] font-medium text-stone-300 block">Deep/REM Index (<span id="quality-val" class="font-bold text-indigo-400">70</span>%)</label>
+                            <input type="range" id="sleep-quality" min="0" max="100" value="70" class="w-full accent-purple-500 h-1.5 bg-stone-800 rounded-lg cursor-pointer">
+                        </div>
+                        <div class="space-y-1.5">
+                            <label class="text-[11px] font-medium text-stone-300 block">Schedule Consistency</label>
+                            <select id="sleep-consistency" class="w-full bg-stone-900/80 border border-stone-800 text-stone-200 rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:border-purple-500/50 appearance-none">
+                                <option value="stable">Stable Bedtime</option>
+                                <option value="variable" selected>Variable Bedtime</option>
+                                <option value="chaotic">Chaotic Profile</option>
+                            </select>
+                        </div>
+                        <div class="sm:col-span-3 pt-2">
+                            <button type="submit" id="sleep-submit" class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold py-2.5 px-4 rounded-xl text-xs tracking-wide hover:brightness-110 transition-all flex items-center justify-center gap-2 cursor-pointer">
+                                <i class="fa-solid fa-chart-line"></i> Process Sleep Metrics Analytics
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <div id="sleep-response-wrapper" class="hidden mt-3 p-4 bg-stone-900/50 border border-stone-800 rounded-xl space-y-2">
+                        <h3 class="text-xs font-bold text-indigo-400 flex items-center gap-1.5">
+                            <i class="fa-solid fa-hourglass-half"></i> Biological Architecture Recommendations
+                        </h3>
+                        <div id="sleep-response-content" class="text-xs text-stone-300 leading-relaxed whitespace-pre-wrap">
+                            </div>
+                    </div>
+                </div>
+
+            </div>
         </div>
 
-        <div class="text-[10px] font-mono text-stone-400 tracking-widest uppercase pt-4">
-            Studio Platform v2.1 Ecosystem
-        </div>
+        <footer class="mt-auto pt-8 pb-4 text-center text-[10px] font-mono text-stone-600 tracking-widest uppercase">
+            Studio Platform v2.1 Ecosystem &bull; CalmCompass AI
+        </footer>
     </div>
 
     <script>
+        // DOM Elements
+        const stressScale = document.getElementById('stress-scale');
+        const stressVal = document.getElementById('stress-val');
+        const sleepQuality = document.getElementById('sleep-quality');
+        const qualityVal = document.getElementById('quality-val');
+        const sleepHours = document.getElementById('sleep-hours');
+        const sleepDuration = document.getElementById('sleep-duration');
+
+        // Dynamic Metric Vector Rings Calculus Engine
+        function updateActivityRings() {
+            // 1. Stress Ring calculation (Middle)
+            const stressScaleVal = parseFloat(stressScale.value);
+            const stressPercent = (stressScaleVal / 10) * 100;
+            const ringStress = document.getElementById('ring-stress');
+            const circStress = 238.76;
+            const offsetStress = circStress - (stressPercent / 100) * circStress;
+            ringStress.style.strokeDashoffset = offsetStress;
+            document.getElementById('ring-val-stress').textContent = stressScaleVal;
+
+            // 2. Sleep Quality Ring calculation (Outer)
+            const qualityScaleVal = parseFloat(sleepQuality.value);
+            const ringQuality = document.getElementById('ring-sleep-quality');
+            const circQuality = 314.16;
+            const offsetQuality = circQuality - (qualityScaleVal / 100) * circQuality;
+            ringQuality.style.strokeDashoffset = offsetQuality;
+            document.getElementById('ring-val-quality').textContent = qualityScaleVal;
+
+            // 3. Sleep Duration Ring calculation (Inner) - Target normalized to 8 hours
+            const durationVal = parseFloat(sleepDuration.value) || 0;
+            const durationPercent = Math.min((durationVal / 8) * 100, 100);
+            const ringDuration = document.getElementById('ring-sleep-duration');
+            const circDuration = 163.36;
+            const offsetDuration = circDuration - (durationPercent / 100) * circDuration;
+            ringDuration.style.strokeDashoffset = offsetDuration;
+            document.getElementById('ring-val-duration').textContent = durationVal.toFixed(1);
+        }
+
+        // Synchronized slider input tracking triggers
+        stressScale.addEventListener('input', () => { 
+            stressVal.textContent = stressScale.value; 
+            updateActivityRings();
+        });
+
+        sleepQuality.addEventListener('input', () => { 
+            qualityVal.textContent = sleepQuality.value; 
+            updateActivityRings();
+        });
+
+        // cross-synchronizing sleep duration values across widgets
+        sleepHours.addEventListener('input', () => {
+            sleepDuration.value = sleepHours.value;
+            updateActivityRings();
+        });
+
+        sleepDuration.addEventListener('input', () => {
+            sleepHours.value = sleepDuration.value;
+            updateActivityRings();
+        });
+
+        // 2. Chat Companion Interface Module (Mode 1 API Trigger Execution)
+        const chatForm = document.getElementById('chat-form');
+        const chatInput = document.getElementById('chat-input');
+        const chatMessages = document.getElementById('chat-messages');
+        const safetyAlert = document.getElementById('safety-alert');
+
+        chatForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const message = chatInput.value.trim();
+            if (!message) return;
+
+            appendMessage('user', message);
+            chatInput.value = '';
+
+            const loadingId = appendMessage('loading', 'Consulting AI Companion Engine...');
+
+            try {
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: message })
+                });
+                const data = await response.json();
+                
+                document.getElementById(loadingId)?.remove();
+
+                if (data.reply) {
+                    appendMessage('ai', data.reply);
+                } else {
+                    appendMessage('ai', 'Error compilation issue from pipeline stack.');
+                }
+
+                if (data.safety_triggered) {
+                    safetyAlert.classList.remove('hidden');
+                } else {
+                    safetyAlert.classList.add('hidden');
+                }
+            } catch (err) {
+                document.getElementById(loadingId)?.remove();
+                appendMessage('ai', `Connection network link error detected: ${err.message}`);
+            }
+        });
+
+        function appendMessage(sender, text) {
+            const id = 'msg-' + Math.random().toString(36).substr(2, 9);
+            const msgDiv = document.createElement('div');
+            msgDiv.id = id;
+            msgDiv.className = 'flex items-start gap-2.5';
+            
+            if (sender === 'user') {
+                msgDiv.innerHTML = `
+                    <div class="flex flex-col w-full max-w-[85%] leading-1.5 p-3 border border-purple-500/20 bg-purple-500/10 rounded-l-xl rounded-br-xl ml-auto">
+                        <p class="text-xs font-normal text-purple-200">${escapeHtml(text)}</p>
+                    </div>
+                    <div class="w-8 h-8 rounded-lg bg-stone-800 border border-stone-700 flex items-center justify-center text-stone-300 text-xs shrink-0">
+                        <i class="fa-solid fa-user"></i>
+                    </div>
+                `;
+            } else if (sender === 'ai') {
+                msgDiv.innerHTML = `
+                    <div class="w-8 h-8 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 text-xs shrink-0">
+                        <i class="fa-solid fa-user-shield"></i>
+                    </div>
+                    <div class="flex flex-col w-full max-w-[85%] leading-1.5 p-3 border border-stone-800 bg-stone-900/60 rounded-r-xl rounded-bl-xl">
+                        <p class="text-xs font-normal text-stone-200">${escapeHtml(text)}</p>
+                    </div>
+                `;
+            } else {
+                msgDiv.innerHTML = `
+                    <div class="w-8 h-8 rounded-lg bg-stone-900 border border-stone-800 flex items-center justify-center text-stone-500 text-xs shrink-0 animate-pulse">
+                        <i class="fa-solid fa-ellipsis"></i>
+                    </div>
+                    <div class="flex flex-col w-full max-w-[85%] leading-1.5 p-3 border border-stone-900/30 rounded-r-xl rounded-bl-xl text-stone-500 italic">
+                        <p class="text-xs font-normal">${text}</p>
+                    </div>
+                `;
+            }
+            
+            chatMessages.appendChild(msgDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            return id;
+        }
+
+        function escapeHtml(str) {
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+
+        // 3. Stress Action Planner Module Trigger (Mode 2 API Integration)
+        const stressForm = document.getElementById('stress-form');
+        const stressResponseWrapper = document.getElementById('stress-response-wrapper');
+        const stressResponseContent = document.getElementById('stress-response-content');
+        const stressSubmitBtn = document.getElementById('stress-submit');
+
+        stressForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const scale = parseInt(stressScale.value);
+            const hours = parseFloat(sleepHours.value);
+            const rate = document.getElementById('heart-rate').value.trim();
+
+            stressSubmitBtn.disabled = true;
+            stressSubmitBtn.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i> Organizing Cooldown Tactics...';
+
+            try {
+                const response = await fetch('/api/stress-plan', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ stress_scale: scale, sleep_hours: hours, heart_rate: rate })
+                });
+                const data = await response.json();
+                
+                stressResponseWrapper.classList.remove('hidden');
+                if (data.plan) {
+                    stressResponseContent.innerHTML = marked.parse(data.plan);
+                } else {
+                    stressResponseContent.innerHTML = 'An unexpected environmental metric error occurred processing token keys.';
+                }
+            } catch (err) {
+                stressResponseWrapper.classList.remove('hidden');
+                stressResponseContent.innerHTML = `<span class="text-red-400">Failed to pull action recommendations: ${err.message}</span>`;
+            } finally {
+                stressSubmitBtn.disabled = false;
+                stressSubmitBtn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i> Construct Cooldown Tactical Guide';
+            }
+        });
+
+        // 4. Advanced Sleep Pattern Analysis Module (Mode 3 API Architecture Integration)
+        const sleepForm = document.getElementById('sleep-form');
+        const sleepResponseWrapper = document.getElementById('sleep-response-wrapper');
+        const sleepResponseContent = document.getElementById('sleep-response-content');
+        const sleepSubmitBtn = document.getElementById('sleep-submit');
+
+        sleepForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const hours = parseFloat(sleepDuration.value);
+            const quality = parseInt(sleepQuality.value);
+            const consistency = document.getElementById('sleep-consistency').value;
+
+            sleepSubmitBtn.disabled = true;
+            sleepSubmitBtn.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i> Analyzing Sleep Graph Metadata...';
+
+            try {
+                const response = await fetch('/api/sleep-analysis', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ hours: hours, quality: quality, consistency: consistency })
+                });
+                const data = await response.json();
+                
+                sleepResponseWrapper.classList.remove('hidden');
+                if (data.analysis) {
+                    sleepResponseContent.textContent = data.analysis;
+                } else {
+                    sleepResponseContent.textContent = 'Could not fetch specialized adolescent sleep matrix recommendations.';
+                }
+            } catch (err) {
+                sleepResponseWrapper.classList.remove('hidden');
+                sleepResponseContent.textContent = `A technical communication connection issue occurred: ${err.message}`;
+            } finally {
+                sleepSubmitBtn.disabled = false;
+                sleepSubmitBtn.innerHTML = '<i class="fa-solid fa-chart-line"></i> Process Sleep Metrics Analytics';
+            }
+        });
+
+        // 5. Cloud Canvas Animation Backdrop Logic Engine (Preserved completely)
         const canvas = document.getElementById('cloud-canvas');
         const ctx = canvas.getContext('2d');
 
@@ -66,30 +506,27 @@
             height = canvas.height = window.innerHeight;
         });
 
-        // Simulates a realistic multi-blob fluffy cloud entity tracking across screen space
         class CloudCluster {
             constructor(startRandomX) {
                 this.reset();
                 if (startRandomX) {
-                    // Pre-distribute horizontally on layout startup
                     this.x = Math.random() * (width + 500) - 250;
                 }
             }
             
             reset() {
                 this.x = -400;
-                this.y = Math.random() * (height * 0.7); // Populate mostly upper and mid sections
-                this.speed = Math.random() * 0.16 + 0.05; // Hyper-slow relaxing drift speed
+                this.y = Math.random() * (height * 0.7);
+                this.speed = Math.random() * 0.16 + 0.05;
                 this.scale = Math.random() * 0.8 + 0.4;
                 
                 this.blobs = [];
-                const blobCount = Math.floor(Math.random() * 5) + 6; // 6 to 10 sub-elements for organic shapes
+                const blobCount = Math.floor(Math.random() * 5) + 6;
                 
-                // Dreamy dusk palette variations
                 const duskColors = [
-                    { center: 'rgba(230, 170, 255, ', edge: 'rgba(107, 33, 168, 0)' },   // Twilight pinkish lavender
-                    { center: 'rgba(192, 132, 252, ', edge: 'rgba(79, 70, 229, 0)' },    // Misty violet
-                    { center: 'rgba(255, 185, 235, ', edge: 'rgba(147, 51, 234, 0)' }     // Soft dusk rose
+                    { center: 'rgba(230, 170, 255, ', edge: 'rgba(107, 33, 168, 0)' },
+                    { center: 'rgba(192, 132, 252, ', edge: 'rgba(79, 70, 229, 0)' },
+                    { center: 'rgba(255, 185, 235, ', edge: 'rgba(147, 51, 234, 0)' }
                 ];
                 const colorSet = duskColors[Math.floor(Math.random() * duskColors.length)];
                 
@@ -97,7 +534,7 @@
                     let offsetX = (Math.random() * 180 - 90) * this.scale;
                     let offsetY = (Math.random() * 50 - 25) * this.scale;
                     let radius = (Math.random() * 100 + 70) * this.scale;
-                    let opacity = Math.random() * 0.09 + 0.05; // Smooth transparency matching dusk atmosphere
+                    let opacity = Math.random() * 0.09 + 0.05;
                     
                     this.blobs.push({
                         ox: offsetX,
@@ -112,7 +549,6 @@
             
             update() {
                 this.x += this.speed;
-                // Recycle cloud once entirely outside viewport boundaries
                 if (this.x - 400 > width) {
                     this.reset();
                 }
@@ -139,24 +575,21 @@
         let clusters = [];
         function init() {
             clusters = [];
-            // Seed cloud arrays across initial space coordinates
             for (let i = 0; i < 7; i++) {
                 clusters.push(new CloudCluster(true));
             }
         }
 
         function animate() {
-            // Render beautiful dusk base backdrop gradient
             let skyGrad = ctx.createLinearGradient(0, 0, 0, height);
-            skyGrad.addColorStop(0, '#0a0414');   // Deep space indigo
-            skyGrad.addColorStop(0.4, '#1b0b2b');  // Deep dusk purple
-            skyGrad.addColorStop(0.75, '#3c1352'); // Rich violet
-            skyGrad.addColorStop(1, '#5c1b6d');    // Plum sunset magenta
+            skyGrad.addColorStop(0, '#0a0414');
+            skyGrad.addColorStop(0.4, '#1b0b2b');
+            skyGrad.addColorStop(0.75, '#3c1352');
+            skyGrad.addColorStop(1, '#5c1b6d');
             
             ctx.fillStyle = skyGrad;
             ctx.fillRect(0, 0, width, height);
 
-            // Frame iteration lifecycle updates
             clusters.forEach(cluster => {
                 cluster.update();
                 cluster.draw();
@@ -165,8 +598,12 @@
             requestAnimationFrame(animate);
         }
 
-        init();
-        animate();
+        // Initialize application parameters on content mount load
+        document.addEventListener("DOMContentLoaded", () => {
+            init();
+            animate();
+            updateActivityRings();
+        });
     </script>
 </body>
 </html>
